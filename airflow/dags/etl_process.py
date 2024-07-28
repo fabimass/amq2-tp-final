@@ -194,9 +194,11 @@ def etl_process():
         X_train, X_test, y_train, y_test = train_test_split(X,  y, test_size=0.3, random_state=42)
 
         # Escalemos los datos
-        #scaler = StandardScaler()
-        #X_train_scaled = scaler.fit_transform(X_train)
-        #X_test_scaled = scaler.transform(X_test)
+        scaler = StandardScaler(with_mean=True, with_std=True)
+        X_train_arr = scaler.fit_transform(X_train)
+        X_test_arr = scaler.transform(X_test)
+        X_train = pd.DataFrame(X_train_arr, columns=X_train.columns)
+        X_test = pd.DataFrame(X_test_arr, columns=X_test.columns)
 
         # Guardamos los datasets en el bucket
         save_to_csv(X_train, "s3://data/train/X_train.csv")
