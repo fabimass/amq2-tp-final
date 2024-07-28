@@ -56,11 +56,20 @@ def etl_process():
         # Quitamos la zona horaria
         clima_df_clean['date'] = clima_df_clean['date'].dt.tz_localize(None)
 
+        # No necesitamos los registros de clima de 2015, 2023 y 2024, ya que no contamos con información de los delitos en esos años
+        years_to_remove = [2015, 2023, 2024]
+        clima_df_clean = clima_df_clean[~clima_df_clean['date'].dt.year.isin(years_to_remove)]
+
+        # Eliminamos columnas innecesarias
+        clima_df.drop(columns=['temperature_2m', 'precipitation', 'pressure_msl', 'wind_gusts_10m'], inplace=True)
+
         # Guardamos el dataset en el bucket
         data_path = "s3://data/clima.csv"
         wr.s3.to_csv(df=clima_df_clean,
                      path=data_path,
                      index=False)
+        
+        return data_path
         
     @task.virtualenv(
         task_id="get_crime_data",
@@ -109,9 +118,97 @@ def etl_process():
         wr.s3.to_csv(df=robos_df_clean,
                      path=data_path,
                      index=False)
+        
+        return data_path
+        
+    @task.virtualenv(
+        task_id="join_datasets",
+        requirements=["pandas==1.5.0",
+                      "awswrangler==3.6.0",
+                      "s3fs",
+                      "numpy"],
+        system_site_packages=True
+    )
+    def join_datasets(clima_path, delitos_path):
+        """
+        Joinea ambos datasets por fecha y hora
+        """
+        import awswrangler as wr
+        import pandas as pd
+        import numpy as np
+
+        clima_df = pd.read_csv(clima_path)
+        delitos_df = pd.read_csv(delitos_path)
+
+        # Hacemos un left join para mantener los datos de clima en el caso en que no haya delitos para un día y hora específicos
+        dataset_final = pd.merge(clima_df, delitos_df, on='date', how='left')
+
+        # En el caso que haya valores vacíos para la cantidad de delitos, asignamos un cero
+        dataset_final['cantidad'] = dataset_final['cantidad'].fillna(0)
+
+        # Renombramos la columna que corresponde a la cantidad de robos
+        dataset_final.rename(columns={'cantidad': 'cantidad_robos'}, inplace=True)
+
+        # Una vez realizado el join, ya no necesitamos la columna de fecha
+        dataset_final.drop(columns=['date'], inplace=True)
+
+        # Aplico feature engineering, modificando el target por el logaritmo
+        dataset_final["cantidad_robos_log"] = np.log(dataset_final["cantidad_robos"]+1)
+
+        # Guardamos el dataset en el bucket
+        data_path = "s3://data/dataset-final.csv"
+        wr.s3.to_csv(df=dataset_final,
+                     path=data_path,
+                     index=False)
+        
+        return data_path
+    
+    @task.virtualenv(
+        task_id="split_dataset",
+        requirements=["pandas==1.5.0",
+                      "awswrangler==3.6.0",
+                      "scikit-learn==1.3.2",
+                      "s3fs"],
+        system_site_packages=True
+    )
+    def split_dataset(df_path):
+        """
+        Separamos el dataset en 70% train y 30% test
+        """
+        import awswrangler as wr
+        from sklearn.model_selection import train_test_split
+        from sklearn.preprocessing import StandardScaler
+        import pandas as pd
+
+        def save_to_csv(df, path):
+            wr.s3.to_csv(df=df,
+                         path=path,
+                         index=False)
+
+        dataset_final = pd.read_csv(df_path)
+
+        X = dataset_final.drop(columns=['cantidad_robos','cantidad_robos_log'])
+        y = dataset_final['cantidad_robos_log']
+
+        # Se separa el dataset en entrenamiento y evaluación
+        X_train, X_test, y_train, y_test = train_test_split(X,  y, test_size=0.3, random_state=42)
+
+        # Escalemos los datos
+        #scaler = StandardScaler()
+        #X_train_scaled = scaler.fit_transform(X_train)
+        #X_test_scaled = scaler.transform(X_test)
+
+        # Guardamos los datasets en el bucket
+        save_to_csv(X_train, "s3://data/train/X_train.csv")
+        save_to_csv(X_test, "s3://data/test/X_test.csv")
+        save_to_csv(y_train, "s3://data/train/y_train.csv")
+        save_to_csv(y_test, "s3://data/test/y_test.csv")
 
 
-    get_weather_data() >> get_crime_data()
+    path_weather = get_weather_data()
+    path_crime = get_crime_data()
+    path_joined_df = join_datasets(path_weather, path_crime)
+    split_dataset(path_joined_df)
 
 
 dag = etl_process()
