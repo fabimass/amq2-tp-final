@@ -206,11 +206,42 @@ def etl_process():
         save_to_csv(y_train, "s3://data/train/y_train.csv")
         save_to_csv(y_test, "s3://data/test/y_test.csv")
 
+        dataset = {
+            "train": X_train,
+            "test": X_test
+        }
+
+        return dataset
+
+    @task.virtualenv(
+        task_id="track_in_mlflow",
+        requirements=["mlflow==2.10.2"],
+        system_site_packages=True
+    )
+    def register_in_mlflow(dataset):
+        """
+        Registramos el experimento en MLflow
+        """
+        import mlflow
+
+        mlflow.set_tracking_uri('http://mlflow:5000')
+        
+        experiment_name = "etl_process"
+
+        if not mlflow.get_experiment_by_name(experiment_name):
+            mlflow.create_experiment(name=experiment_name) 
+
+        experiment = mlflow.get_experiment_by_name(experiment_name)
+
+        with mlflow.start_run(experiment_id = experiment.experiment_id):
+            mlflow.log_param("Train observations", dataset['train'].shape[0])
+            mlflow.log_param("Test observations", dataset['test'].shape[0])
 
     path_weather = get_weather_data()
     path_crime = get_crime_data()
     path_joined_df = join_datasets(path_weather, path_crime)
-    split_dataset(path_joined_df)
+    dataset = split_dataset(path_joined_df)
+    register_in_mlflow(dataset)
 
 
 dag = etl_process()
