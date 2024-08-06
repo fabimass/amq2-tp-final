@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from sklearn.feature_selection import mutual_info_classif
+from sklearn.feature_selection import mutual_info_regression
 
 
 def plot_correlation_with_target(X, y, target_col="num", save_path=None):
@@ -80,7 +80,7 @@ def plot_information_gain_with_target(X, y, target_col="num", save_path=None):
         raise ValueError("X and y are not aligned")
 
     # Computa la ganancia de información con respecto a la columna objetivo
-    importances = pd.Series(mutual_info_classif(X, y.to_numpy().ravel()), X.columns).sort_values()
+    importances = pd.Series(mutual_info_regression(X, y.to_numpy().ravel()), X.columns).sort_values()
 
     # Generamos la paleta de colores
     colors = sns.diverging_palette(10, 130, as_cmap=True)
