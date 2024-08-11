@@ -77,7 +77,7 @@ def check_model():
     global version_model
 
     try:
-        model_name = "heart_disease_model_prod"
+        model_name = "crime_prediction_model_prod"
         alias = "champion"
 
         mlflow.set_tracking_uri('http://mlflow:5000')
@@ -99,110 +99,142 @@ def check_model():
 
 class ModelInput(BaseModel):
     """
-    Input schema for the heart disease prediction model.
+    Esquema de entrada para el modelo de predicción de robos en CABA según datos del clima.
 
-    This class defines the input fields required by the heart disease prediction model along with their descriptions
-    and validation constraints.
+    Esta clase define los campos de entrada así como una descripción de cada uno y sus límites de validación.
 
-    :param age: Age of the patient (0 to 150).
-    :param sex: Sex of the patient. 1: male; 0: female.
-    :param cp: Chest pain type. 1: typical angina; 2: atypical angina; 3: non-anginal pain; 4: asymptomatic.
-    :param trestbps: Resting blood pressure in mm Hg on admission to the hospital (90 to 220).
-    :param chol: Serum cholestoral in mg/dl (110 to 600).
-    :param fbs: Fasting blood sugar. 1: >120 mg/dl; 0: <120 mg/dl.
-    :param restecg: Resting electrocardiographic results. 0: normal; 1: having ST-T wave abnormality; 2: showing
-                    probable or definite left ventricular hypertrophy.
-    :param thalach: Maximum heart rate achieved (beats per minute) (50 to 210).
-    :param exang: Exercise induced angina. 1: yes; 0: no.
-    :param oldpeak: ST depression induced by exercise relative to rest (0.0 to 7.0).
-    :param slope: The slope of the peak exercise ST segment. 1: upsloping; 2: flat; 3: downsloping.
-    :param ca: Number of major vessels colored by flourosopy (0 to 3).
-    :param thal: Thalassemia disease. 3: normal; 6: fixed defect; 7: reversable defect.
+    :param is_day: Indica si es día o noche. 0: Noche. 1: Día.
+    :param sunshine_duration. Duración de la luz solar, en segundos, para la hora dada (0 a 3600).
+    :param temperature_2m: Temperatura del aire a 2 m del suelo, en °C (-20 a 50).
+    :param apparent_temperature: Temperatura aparente, en °C (-20 a 50).
+    :param wind_gusts: Rafagas de viento, en km/h. (0 a 100).
+    :param dew_point_2m: Temperatura del punto de rocío a 2 m el suelo, en °C (-20 a 50).
+    :param cloud_cover: Cobertura total de nubes como fracción de área, en % (0,100).
+    :param cloud_cover_low: Cobertura de nubes y niebla hasta 2km de altitud, en % (0,100).
+    :param cloud_cover_mid: Cobertura de nubes y niebla desde 2km de altitud hasta 6km, en % (0,100).
+    :param cloud_cover_high: Cobertura de nubes y niebla mayor a 6km de altitud, en % (0,100). 
+    :param wind_speed_10m: Velocidad del viento a 10m del suelo, en km/h (0 a 100).
+    :param weather_code: Condición climática como código numérico.
+    :param rain: Cantidad de precipitaciones del hora anterior, en mm (0 a 100).
+    :param precipitation: Suma de precipitaciones totales de la hora anterior, en mm (0 a 100).
+    :param wind_direction_10m: Dirección del viento a 10m sobre el suelo, en ° (0 a 360).
+    :param surface_pressure: Presión en la superficie, en hPa (500 a 1500).
+    :param pressure_msl: Presión del aire atmosférico a nivel del mar, en hPa (500 a 1500).
+    :param relative_humidity_2m: Humedad relativa a 2m del suelo, en % (0 a 100).
     """
 
-    age: int = Field(
-        description="Age of the patient",
-        ge=0,
-        le=150,
-    )
-    sex: int = Field(
-        description="Sex of the patient. 1: male; 0: female",
+    is_day: int = Field(
+        description="Indica si es día o noche. 0: Noche. 1: Día",
         ge=0,
         le=1,
     )
-    cp: int = Field(
-        description="Chest pain type. 1: typical angina; 2: atypical angina, 3: non-anginal pain; 4: asymptomatic",
-        ge=1,
-        le=4,
-    )
-    trestbps: float = Field(
-        description="Resting blood pressure in mm Hg on admission to the hospital",
-        ge=90,
-        le=220,
-    )
-    chol: float = Field(
-        description="Serum cholestoral in mg/dl",
-        ge=110,
-        le=600,
-    )
-    fbs: int = Field(
-        description="Fasting blood sugar. 1: >120 mg/dl; 0: <120 mg/dl",
+    sunshine_duration: float = Field(
+        description="Duración de la luz solar, en segundos",
         ge=0,
-        le=1,
+        le=3600,
     )
-    restecg: int = Field(
-        description="Resting electrocardiographic results. 0: normal; 1:  having ST-T wave abnormality (T wave "
-                    "inversions and/or ST elevation or depression of > 0.05 mV), 2: showing probable or definite "
-                    "left ventricular hypertrophy by Estes' criteria",
+    temperature_2m: float = Field(
+        description="Temperatura del aire a 2 m del suelo, en °C",
+        ge=-20,
+        le=50,
+    )
+    apparent_temperature: float = Field(
+        description="Temperatura aparente, en °C",
+        ge=-20,
+        le=50,
+    )
+    wind_gusts: float = Field(
+        description="Ráfagas de viento, en km/h",
         ge=0,
-        le=2,
+        le=100,
     )
-    thalach: float = Field(
-        description="Maximum heart rate achieved (beats per minute)",
-        ge=50,
-        le=210,
+    dew_point_2m: float = Field(
+        description="Temperatura del punto de rocío a 2 m el suelo, en °C",
+        ge=-20,
+        le=50,
     )
-    exang: int = Field(
-        description="Exercise induced angina. 1: yes; 0: no",
+    cloud_cover: float = Field(
+        description="Cobertura total de nubes como fracción de área, en %",
         ge=0,
-        le=1,
+        le=100,
     )
-    oldpeak: float = Field(
-        description="ST depression induced by exercise relative to rest",
-        ge=0.0,
-        le=7.0,
-    )
-    slope: int = Field(
-        description="The slope of the peak exercise ST segment .1: upsloping; 2: flat, 3: downsloping",
-        ge=1,
-        le=3,
-    )
-    ca: int = Field(
-        description="Number of major vessels colored by flourosopy",
+    cloud_cover_low: float = Field(
+        description="Cobertura de nubes y niebla hasta 2km de altitud, en %",
         ge=0,
-        le=3,
+        le=100,
     )
-    thal: Literal[3, 6, 7] = Field(
-        description="Thalassemia disease. 3: normal; 6: fixed defect; 7: reversable defect",
+    cloud_cover_mid: float = Field(
+        description="Cobertura de nubes y niebla desde 2km de altitud hasta 6km, en %",
+        ge=0,
+        le=100,
+    )
+    cloud_cover_high: float = Field(
+        description="Cobertura de nubes y niebla mayor a 6km de altitud, en %",
+        ge=0,
+        le=100,
+    )
+    wind_speed_10m: float = Field(
+        description="Velocidad del viento a 10m del suelo, en km/h",
+        ge=0,
+        le=100,
+    )
+    weather_code: int = Field(
+        description="Condición climática como código numérico",
+    )
+    rain: float = Field(
+        description="Cantidad de precipitaciones de la hora anterior, en mm",
+        ge=0,
+        le=100,
+    )
+    precipitation: float = Field(
+        description="Suma de precipitaciones totales de la hora anterior, en mm",
+        ge=0,
+        le=100,
+    )
+    wind_direction_10m: float = Field(
+        description="Dirección del viento a 10m sobre el suelo, en °",
+        ge=0,
+        le=360,
+    )
+    surface_pressure: float = Field(
+        description="Presión en la superficie, en hPa",
+        ge=500,
+        le=1500,
+    )
+    pressure_msl: float = Field(
+        description="Presión del aire atmosférico a nivel del mar, en hPa",
+        ge=500,
+        le=1500,
+    )
+    relative_humidity_2m: float = Field(
+        description="Humedad relativa a 2m del suelo, en %",
+        ge=0,
+        le=100,
     )
 
     model_config = {
-        "json_schema_extra": {
-            "examples": [
+    "json_schema_extra": {
+        "examples":
+            [
                 {
-                    "age": 67,
-                    "sex": 1,
-                    "cp": 4,
-                    "trestbps": 160.0,
-                    "chol": 286.0,
-                    "fbs": 0,
-                    "restecg": 2,
-                    "thalach": 108.0,
-                    "exang": 1,
-                    "oldpeak": 1.5,
-                    "slope": 2,
-                    "ca": 3,
-                    "thal": 3,
+                    "is_day": 1,
+                    "sunshine_duration": 980,
+                    "temperature_2m": 25.0,
+                    "apparent_temperature": 27.0,
+                    "wind_gusts": 45.0,
+                    "dew_point_2m": 15.0,
+                    "cloud_cover": 50,
+                    "cloud_cover_low": 30,
+                    "cloud_cover_mid": 20,
+                    "cloud_cover_high": 10,
+                    "wind_speed_10m": 20.0,
+                    "weather_code": 1,
+                    "rain": 0.0,
+                    "precipitation": 0.0,
+                    "wind_direction_10m": 154.0,
+                    "surface_pressure": 1015.0,
+                    "pressure_msl": 1010.0,
+                    "relative_humidity_2m": 65,
                 }
             ]
         }
@@ -211,28 +243,27 @@ class ModelInput(BaseModel):
 
 class ModelOutput(BaseModel):
     """
-    Output schema for the heart disease prediction model.
+    Esquema de entrada para el modelo de predicción de robos en CABA según datos del clima.
 
-    This class defines the output fields returned by the heart disease prediction model along with their descriptions
-    and possible values.
+    Esta clase define los campos de salida así como una descripción de cada uno y sus límites de validación.
 
-    :param int_output: Output of the model. True if the patient has a heart disease.
-    :param str_output: Output of the model in string form. Can be "Healthy patient" or "Heart disease detected".
+    :param float_output: Salida del modelo. Número que indica la cantidad de robos para las condiciones climáticas dadas.
+    :param str_output: Salida del modelo en formato de cadena de caracteres.
     """
 
-    int_output: bool = Field(
-        description="Output of the model. True if the patient has a heart disease",
+    float_output: float = Field(
+        description="Salida del modelo en formato numérico. Indica cuántos robos se predicen para el día y hora dados, según condiciones climáticas.",
     )
-    str_output: Literal["Healthy patient", "Heart disease detected"] = Field(
-        description="Output of the model in string form",
+    str_output: str = Field(
+        description="Salda del modelo en formato string.",
     )
 
     model_config = {
         "json_schema_extra": {
             "examples": [
                 {
-                    "int_output": True,
-                    "str_output": "Heart disease detected",
+                    "float_output": 3.5,
+                    "str_output": "Según las condiciones climáticas de entrada se predice que hoy habrán 3.5 robos.",
                 }
             ]
         }
@@ -240,7 +271,7 @@ class ModelOutput(BaseModel):
 
 
 # Load the model before start
-model, version_model, data_dict = load_model("heart_disease_model_prod", "champion")
+model, version_model, data_dict = load_model("crime_prediction_model_prod", "champion")
 
 app = FastAPI()
 
@@ -248,11 +279,11 @@ app = FastAPI()
 @app.get("/")
 async def read_root():
     """
-    Root endpoint of the Heart Disease Detector API.
+    Root endpoint de la API para predecir robos en CABA según condiciones climáticas.
 
-    This endpoint returns a JSON response with a welcome message to indicate that the API is running.
+    Este endpoint retorna un JSON con un mensaje para comprobar que la API funciona correctamente.
     """
-    return JSONResponse(content=jsonable_encoder({"message": "Welcome to the Heart Disease Detector API"}))
+    return JSONResponse(content=jsonable_encoder({"message": "Bienvenido a la API para predecir robos en CABA según condiciones climáticas."}))
 
 
 @app.post("/predict/", response_model=ModelOutput)
@@ -264,10 +295,9 @@ def predict(
     background_tasks: BackgroundTasks
 ):
     """
-    Endpoint for predicting heart disease.
+    Endpoint para predecir cantidad de robos según condiciones climáticas.
 
-    This endpoint receives features related to a patient's health and predicts whether the patient has heart disease
-    or not using a trained model. It returns the prediction result in both integer and string formats.
+    Recibe como features las condiciones climáticas del día y hora en el que se quiere hacer la predicción.
     """
 
     # Extract features from the request and convert them into a list and dictionary
@@ -277,33 +307,18 @@ def predict(
     # Convert features into a pandas DataFrame
     features_df = pd.DataFrame(np.array(features_list).reshape([1, -1]), columns=features_key)
 
-    # Process categorical features
-    for categorical_col in data_dict["categorical_columns"]:
-        features_df[categorical_col] = features_df[categorical_col].astype(int)
-        categories = data_dict["categories_values_per_categorical"][categorical_col]
-        features_df[categorical_col] = pd.Categorical(features_df[categorical_col], categories=categories)
-
-    # Convert categorical features into dummy variables
-    features_df = pd.get_dummies(data=features_df,
-                                 columns=data_dict["categorical_columns"],
-                                 drop_first=True)
-
-    # Reorder DataFrame columns
-    features_df = features_df[data_dict["columns_after_dummy"]]
-
-    # Scale the data using standard scaler
-    features_df = (features_df-data_dict["standard_scaler_mean"])/data_dict["standard_scaler_std"]
+    # Scale the data using standard scaler. TODO: Agregar en el proceso de ETL el guardado de parámetros del standard scaler.
+    # features_df = (features_df-data_dict["standard_scaler_mean"])/data_dict["standard_scaler_std"]
 
     # Make the prediction using the trained model
     prediction = model.predict(features_df)
 
-    # Convert prediction result into string format
-    str_pred = "Healthy patient"
-    if prediction[0] > 0:
-        str_pred = "Heart disease detected"
+    # Obtengo salida en float y en string
+    float_output = prediction[0]
+    str_output = f"Se predicen {float_output:.1f} robos según las condiciones climáticas dadas."
 
     # Check if the model has changed asynchronously
     background_tasks.add_task(check_model)
 
     # Return the prediction result
-    return ModelOutput(int_output=bool(prediction[0].item()), str_output=str_pred)
+    return ModelOutput(float_output=float_output, str_output=str_output)
