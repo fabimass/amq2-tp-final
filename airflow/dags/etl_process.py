@@ -168,7 +168,8 @@ def etl_process():
         requirements=["pandas==1.5.0",
                       "awswrangler==3.6.0",
                       "scikit-learn==1.3.2",
-                      "s3fs"],
+                      "s3fs",
+                      "boto3"],
         system_site_packages=True
     )
     def split_dataset(df_path):
@@ -176,6 +177,8 @@ def etl_process():
         Separamos el dataset en 70% train y 30% test
         """
         import awswrangler as wr
+        import boto3
+        import json
         from sklearn.model_selection import train_test_split
         from sklearn.preprocessing import StandardScaler
         import pandas as pd
@@ -199,6 +202,26 @@ def etl_process():
         X_test_arr = scaler.transform(X_test)
         X_train = pd.DataFrame(X_train_arr, columns=X_train.columns)
         X_test = pd.DataFrame(X_test_arr, columns=X_test.columns)
+
+        # Guardamos los datos del scaler dentro del bucket data de s3, en data/data_info/data.json
+        client = boto3.client('s3')
+        features_column_order = X.columns
+        data_dict = {
+                'columns' : dataset_final.drop(columns=['cantidad_robos']).columns.tolist(),
+                'features_column_order' : features_column_order.tolist(),
+                'standard_scaler_mean' : scaler.mean_.tolist(),
+                'standard_scaler_std' : scaler.scale_.tolist(),
+            }
+        data_string = json.dumps(data_dict, indent=2)
+
+        try:
+            client.put_object(
+            Bucket='data',
+            Key='data_info/data.json',
+            Body=data_string
+            )
+        except:
+            pass
 
         # Guardamos los datasets en el bucket
         save_to_csv(X_train, "s3://data/train/X_train.csv")

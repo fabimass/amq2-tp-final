@@ -300,25 +300,28 @@ def predict(
     Recibe como features las condiciones climáticas del día y hora en el que se quiere hacer la predicción.
     """
 
-    # Extract features from the request and convert them into a list and dictionary
+    # Extrae los features del request en un formato diccionario y los convierte a listas
     features_list = [*features.dict().values()]
     features_key = [*features.dict().keys()]
 
-    # Convert features into a pandas DataFrame
+    # Ahora es posible crear un dataframe con los features
     features_df = pd.DataFrame(np.array(features_list).reshape([1, -1]), columns=features_key)
 
-    # Scale the data using standard scaler. TODO: Agregar en el proceso de ETL el guardado de parámetros del standard scaler.
-    # features_df = (features_df-data_dict["standard_scaler_mean"])/data_dict["standard_scaler_std"]
+    # Ordenamos el dataframe para que las columnas tengan el mismo orden que espera recibir el modelo
+    features_df = features_df[data_dict["features_column_order"]]
 
-    # Make the prediction using the trained model
+    # Aplicamos estandarización (standard scaler)
+    features_df = (features_df-data_dict["standard_scaler_mean"])/data_dict["standard_scaler_std"]
+
+    # Se hace la predicción utilizando el mejor modelo entrenado
     prediction = model.predict(features_df)
 
     # Obtengo salida en float y en string
     float_output = prediction[0]
     str_output = f"Se predicen {float_output:.1f} robos según las condiciones climáticas dadas."
 
-    # Check if the model has changed asynchronously
+    # Se lanza un task para chequear asincrónicamente si el modelo ha cambiado
     background_tasks.add_task(check_model)
 
-    # Return the prediction result
+    # Retorna resultado de la predicción
     return ModelOutput(float_output=float_output, str_output=str_output)
