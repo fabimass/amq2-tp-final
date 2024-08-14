@@ -107,7 +107,7 @@ class ModelInput(BaseModel):
     :param sunshine_duration. Duración de la luz solar, en segundos, para la hora dada (0 a 3600).
     :param temperature_2m: Temperatura del aire a 2 m del suelo, en °C (-20 a 50).
     :param apparent_temperature: Temperatura aparente, en °C (-20 a 50).
-    :param wind_gusts: Rafagas de viento, en km/h. (0 a 100).
+    :param wind_gusts_10m: Rafagas de viento, en km/h. (0 a 100).
     :param dew_point_2m: Temperatura del punto de rocío a 2 m el suelo, en °C (-20 a 50).
     :param cloud_cover: Cobertura total de nubes como fracción de área, en % (0,100).
     :param cloud_cover_low: Cobertura de nubes y niebla hasta 2km de altitud, en % (0,100).
@@ -143,7 +143,7 @@ class ModelInput(BaseModel):
         ge=-20,
         le=50,
     )
-    wind_gusts: float = Field(
+    wind_gusts_10m: float = Field(
         description="Ráfagas de viento, en km/h",
         ge=0,
         le=100,
@@ -221,7 +221,7 @@ class ModelInput(BaseModel):
                     "sunshine_duration": 980,
                     "temperature_2m": 25.0,
                     "apparent_temperature": 27.0,
-                    "wind_gusts": 45.0,
+                    "wind_gusts_10m": 45.0,
                     "dew_point_2m": 15.0,
                     "cloud_cover": 50,
                     "cloud_cover_low": 30,
