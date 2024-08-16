@@ -1,5 +1,11 @@
 # Ejemplo de Implementación de un Modelo de predicción de robos en la Ciudad de Bs As en base a las condiciones climáticas
 
+> Autores:
+>
+> - Massotto Fabian
+> - Saraco Leandro
+> - Pertierra Valentín
+
 ### AMq2 - CEIA - FIUBA
 
 En este ejemplo, mostramos una implementación de un modelo productivo para detectar si un
