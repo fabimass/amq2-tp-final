@@ -21,7 +21,7 @@ La implementación incluye:
   compara este modelo con el mejor modelo (llamado `champion`), y si es mejor, se reemplaza. Todo
   se lleva a cabo siendo registrado en MLflow.
 
-![Diagrama de servicios](example_project.png)
+![Diagrama de servicios](example_project.jpeg)
 
 ## Testeo de Funcionamiento
 
