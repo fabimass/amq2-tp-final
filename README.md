@@ -52,22 +52,10 @@ Se puede encontrar un ejemplo en `notebook/api_test.ipynb`.
 
 Para obtener más detalles sobre la API, ingresa a `http://localhost:8800/docs`.
 
-### Fronend
+### Frontend
 
-Podemos realizar predicciones utilizando el fronend, accediendo a `http://localhost:8501/`.
+Podemos realizar predicciones utilizando un frontend en Streamlit, accediendo a `http://localhost:8501/`.
 
 
 Nota: Recuerda que si esto se ejecuta en un servidor diferente a tu computadora, debes reemplazar
 `localhost` por la IP correspondiente o el dominio DNS, si corresponde.
-
-Nota: Recordar que si esto se ejecuta en un servidor aparte de tu computadora, reemplazar a
-localhost por la IP correspondiente o DNS domain si corresponde.
-
-La forma en que se implementó tiene la desventaja de que solo se puede hacer una predicción a
-la vez, pero tiene la ventaja de que FastAPI y Pydantic nos permiten tener un fuerte control
-sobre los datos sin necesidad de agregar una línea de código adicional. FastAPI maneja toda
-la validación.
-
-Otra forma más típica es pasar los features como una lista u otro formato similar con
-N observaciones y M features, lo que permite realizar varias predicciones al mismo tiempo.
-Sin embargo, se pierde la validación automática.
